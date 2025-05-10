@@ -1,0 +1,38 @@
+import { ArrowRight } from "lucide-react";
+import Header from "./components/header";
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white overflow-hidden">
+      {/* Header */}
+      <Header />
+
+      {/* Hero Section */}
+      <section className="min-h-[80vh] flex items-center justify-center px-6 md:px-20 relative">
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-20 left-1/4 w-72 h-72 bg-purple-600 rounded-full filter blur-3xl opacity-20"></div>
+          <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-blue-600 rounded-full filter blur-3xl opacity-20"></div>
+        </div>
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-purple-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+              Welcome to track.sol
+            </span>
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto">
+            The next generation blockchain tracking and analytics platform built
+            for the Solana ecosystem
+          </p>
+
+          <div className="flex flex-col md:flex-row justify-center gap-4">
+            <button className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition shadow-lg flex items-center justify-center">
+              Get Started
+              <ArrowRight size={18} className="ml-2" />
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
