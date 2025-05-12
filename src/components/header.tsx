@@ -1,5 +1,4 @@
-import { Wallet } from "lucide-react";
-import React from "react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 const Header = () => {
   return (
@@ -35,13 +34,14 @@ const Header = () => {
           Community
         </a>
       </nav>
-      <button
+      {/* <button
         // onClick={handleConnectWallet}
         className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center space-x-2 hover:from-purple-700 hover:to-blue-700 transition shadow-lg"
       >
         <Wallet size={18} />
         <span>{"Connect Wallet"}</span>
-      </button>
+      </button> */}
+      <WalletMultiButton />
     </header>
   );
 };
