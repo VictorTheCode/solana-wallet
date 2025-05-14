@@ -1,4 +1,4 @@
-import Header from "./components/Header";
+import Header from "./components/Header.tsx";
 import { useWallet } from "@solana/wallet-adapter-react";
 import SendSolForm from "./components/SendSolForm";
 
