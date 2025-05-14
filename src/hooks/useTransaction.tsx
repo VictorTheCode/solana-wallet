@@ -5,6 +5,7 @@ import {
   Transaction,
   SystemProgram,
   ComputeBudgetProgram,
+  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import type {
   TransactionPriority,
@@ -70,7 +71,7 @@ export const useTransaction = () => {
 
     try {
       // Parse the amount to lamports (1 SOL = 1,000,000,000 lamports)
-      const lamports = amount * 1_000_000_000;
+      const lamports = amount * LAMPORTS_PER_SOL;
 
       // Create a new destination public key
       const toPublicKey = new PublicKey(destinationAddress);

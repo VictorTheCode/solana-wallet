@@ -1,7 +1,26 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: satoshi;
+  src: url(/Satoshi-Regular.otf);
+}
+
+@font-face {
+  font-family: satoshi-medium;
+  src: url(/Satoshi-Medium.otf);
+}
+
+.satoshi {
+  font-family: satoshi;
+  font-weight: 600;
+}
+
+.satoshi-medium {
+  font-family: satoshi-medium;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: satoshi-medium, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 

@@ -21,7 +21,7 @@ const SendSolForm = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [priority, setPriority] = useState<TransactionPriority>("normal");
   const [showRecentTx, setShowRecentTx] = useState(false);
-  const [network, setNetwork] = useState("mainnet-beta");
+  const [network, setNetwork] = useState("devnet");
 
   // Custom hooks for wallet and transaction functionality
   const {
@@ -148,7 +148,7 @@ const SendSolForm = () => {
                 <CheckCircle className="w-5 h-5 mr-2" />
                 Transaction Sent!
               </h3>
-              <div className="bg-green-500 bg-opacity-20 text-green-400 text-xs font-medium px-2 py-1 rounded">
+              <div className="bg-green-500 bg-opacity-20 text-gray-200 text-xs font-medium px-2 py-1 rounded">
                 Confirmed
               </div>
             </div>
