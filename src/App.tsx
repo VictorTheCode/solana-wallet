@@ -17,9 +17,9 @@ export default function App() {
           </div>
 
           <div className="max-w-4xl mx-auto text-center relative z-10">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold my-6">
               <span className="bg-gradient-to-r from-purple-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-                Welcome to track.sol
+                Welcome to SendSol
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto">
@@ -27,7 +27,7 @@ export default function App() {
             </p>
 
             {connected ? (
-              <div className="flex items-center justify-center mt-10">
+              <div className="flex items-center justify-center my-10 ">
                 <SendSolForm />
               </div>
             ) : (

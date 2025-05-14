@@ -8,82 +8,72 @@ import {
   Clock,
   Shield,
   ChevronDown,
+  AlertCircle,
 } from "lucide-react";
+import { useSolanaWallet } from "../hooks/useSolanaWallet";
+import { useTransaction } from "../hooks/useTransaction";
+import type { TransactionPriority } from "../interfaces/transaction";
 
 const SendSolForm = () => {
+  // UI state
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [txHash, setTxHash] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [priority, setPriority] = useState("normal");
+  const [priority, setPriority] = useState<TransactionPriority>("normal");
   const [showRecentTx, setShowRecentTx] = useState(false);
-  const [balance, setBalance] = useState("14.253");
+  const [network, setNetwork] = useState("mainnet-beta");
 
-  // Mock recent transactions
-  const recentTransactions = [
-    {
-      address: "8xhT..9Yka",
-      amount: "0.5",
-      time: "2 hrs ago",
-      status: "completed",
-    },
-    {
-      address: "3zFr..7Bpq",
-      amount: "1.2",
-      time: "1 day ago",
-      status: "completed",
-    },
-  ];
+  // Custom hooks for wallet and transaction functionality
+  const {
+    balance,
+    walletAddress,
+    formattedAddress,
+    connected,
+    isConnecting,
+    connectWallet,
+    disconnectWallet,
+    recentTransactions,
+    error: walletError,
+    // setError: setWalletError,
+  } = useSolanaWallet();
 
-  // Mock transaction send function
-  const handleSubmit = (e: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!amount || !address) return;
+  const {
+    sendSol,
+    isSubmitting,
+    isSuccess,
+    txHash,
+    error: txError,
+    getFee,
+    getTotal,
+    resetTransactionState,
+  } = useTransaction();
 
-    setIsSubmitting(true);
+  // Merged error state from both hooks
+  const error = txError || walletError;
 
-    // Simulate transaction processing
-    setTimeout(() => {
-      // Generate a mock transaction hash
-      const mockTxHash =
-        "4xPG9iTu8UzHzFECzHxnKmo4LdVSW2CC2YarZcP3YgVCwMJNUcXlmXQAYvg2fKJt";
-      setTxHash(mockTxHash);
+  // Handle form submission
+  const handleSubmit = async () => {
+    if (!amount || !address || !connected) return;
 
-      setIsSubmitting(false);
-      setIsSuccess(true);
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount)) return;
 
-      // Update mock balance
-      setBalance((parseFloat(balance) - parseFloat(amount)).toFixed(3));
+    const success = await sendSol({
+      amount: parsedAmount,
+      destinationAddress: address,
+      priority,
+    });
 
-      // Reset form after viewing
-      setTimeout(() => {
-        setIsSuccess(false);
-        setAmount("");
-        setAddress("");
-      }, 10000);
-    }, 2000);
-  };
-
-  // Calculate transaction fee based on priority
-  const getFee = () => {
-    switch (priority) {
-      case "high":
-        return "0.000010";
-      case "normal":
-        return "0.000005";
-      case "low":
-        return "0.000001";
-      default:
-        return "0.000005";
+    if (success) {
+      // Transaction was successful
+      // The transaction state is managed by the useTransaction hook
     }
   };
 
-  // Calculate total with fee
-  const getTotal = () => {
-    if (!amount) return "0";
-    return (parseFloat(amount) + parseFloat(getFee())).toFixed(6);
+  // Format wallet address for display (fallback if not provided by hook)
+  const formatAddress = (addr: string) => {
+    if (!addr) return "";
+    return addr.slice(0, 4) + "..." + addr.slice(-4);
   };
 
   return (
@@ -92,18 +82,62 @@ const SendSolForm = () => {
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Send SOL</h2>
-          <div className="flex flex-col items-end">
-            <div className="flex items-center">
-              <Wallet className="w-5 h-5 mr-2" />
-              <span className="font-bold">{balance} SOL</span>
+          {connected ? (
+            <div className="flex flex-col items-end">
+              <div className="flex items-center">
+                <Wallet className="w-5 h-5 mr-2" />
+                <span className="font-bold">{balance.toFixed(4)} SOL</span>
+              </div>
+              <span className="text-xs text-indigo-200 mt-1">
+                Connected: {formattedAddress || formatAddress(walletAddress)}
+              </span>
             </div>
-            <span className="text-xs text-indigo-200 mt-1">
-              Connected: Phan...5Gxz
-            </span>
+          ) : (
+            <div className="flex items-center">
+              <span className="text-indigo-200 text-sm mr-2">
+                Not connected
+              </span>
+              <Wallet className="w-5 h-5" />
+            </div>
+          )}
+        </div>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-indigo-200">Fast & secure transactions</p>
+          <div className="text-xs bg-indigo-800 bg-opacity-50 px-2 py-1 rounded">
+            {network}
           </div>
         </div>
-        <p className="text-indigo-200 mt-1">Fast & secure transactions</p>
       </div>
+
+      {/* Wallet Connection */}
+      {!connected && (
+        <div className="p-6 bg-gray-700 bg-opacity-30">
+          <button
+            onClick={connectWallet}
+            disabled={isConnecting}
+            className="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-lg font-medium flex items-center justify-center text-white transition-all"
+          >
+            {isConnecting ? (
+              <>
+                <Loader className="w-5 h-5 animate-spin mr-2" />
+                Connecting...
+              </>
+            ) : (
+              <>
+                <Wallet className="w-5 h-5 mr-2" />
+                Connect Wallet
+              </>
+            )}
+          </button>
+
+          {error && (
+            <p className="text-red-400 text-xs mt-2 flex items-center">
+              <AlertCircle className="w-4 h-4 mr-1" />
+              {error}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Form Fields */}
       <div className="p-6 relative z-10">
@@ -126,19 +160,21 @@ const SendSolForm = () => {
               </div>
               <div className="flex justify-between mb-1">
                 <span className="text-gray-400">To:</span>
-                <span className="truncate max-w-xs">{address}</span>
+                <span className="truncate max-w-xs">
+                  {formatAddress(address)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Transaction Hash:</span>
                 <span className="truncate max-w-xs">
-                  {txHash.slice(0, 10)}...{txHash.slice(-4)}
+                  {txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : "—"}
                 </span>
               </div>
             </div>
 
             <div className="flex space-x-2 mt-4">
               <a
-                href={`https://explorer.solana.com/tx/${txHash}`}
+                href={`https://explorer.solana.com/tx/${txHash}?cluster=${network}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center py-2 px-3 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors flex-1"
@@ -148,7 +184,7 @@ const SendSolForm = () => {
               </a>
               <button
                 onClick={() => {
-                  setIsSuccess(false);
+                  resetTransactionState();
                   setAmount("");
                   setAddress("");
                 }}
@@ -159,7 +195,7 @@ const SendSolForm = () => {
               </button>
             </div>
           </div>
-        ) : (
+        ) : connected ? (
           <>
             <div className="mb-5">
               <label
@@ -192,7 +228,11 @@ const SendSolForm = () => {
                   id="amount"
                   type="text"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    // Only allow numbers and decimal points
+                    const value = e.target.value.replace(/[^0-9.]/g, "");
+                    setAmount(value);
+                  }}
                   placeholder="0.00"
                   className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                 />
@@ -201,9 +241,9 @@ const SendSolForm = () => {
                 </div>
               </div>
               <div className="flex justify-between mt-1 text-xs text-gray-400">
-                <span>Available: {balance} SOL</span>
+                <span>Available: {balance.toFixed(4)} SOL</span>
                 <button
-                  onClick={() => setAmount(balance)}
+                  onClick={() => setAmount((balance - 0.01).toFixed(4))} // Leave small amount for fees
                   className="text-indigo-400 hover:text-indigo-300"
                 >
                   MAX
@@ -226,7 +266,7 @@ const SendSolForm = () => {
               </button>
 
               {showAdvanced && (
-                <div className="bg-gray-700 bg-opacity-50 rounded-lg p-3 animate-fade-in">
+                <div className="bg-gray-700 bg-opacity-50 rounded-lg p-3">
                   <div className="mb-3">
                     <label className="block text-gray-300 mb-2 text-sm">
                       Transaction Priority
@@ -268,12 +308,27 @@ const SendSolForm = () => {
                   <div className="text-xs text-gray-400">
                     <div className="flex justify-between mb-1">
                       <span>Network Fee:</span>
-                      <span>{getFee()} SOL</span>
+                      <span>{getFee(priority)} SOL</span>
                     </div>
                     <div className="flex justify-between font-medium text-gray-300">
                       <span>Total Amount:</span>
-                      <span>{getTotal()} SOL</span>
+                      <span>{getTotal(amount, priority)} SOL</span>
                     </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between">
+                    <label className="block text-gray-300 text-sm">
+                      Network
+                    </label>
+                    <select
+                      value={network}
+                      onChange={(e) => setNetwork(e.target.value)}
+                      className="bg-gray-600 text-white text-xs rounded px-2 py-1"
+                    >
+                      <option value="mainnet-beta">Mainnet</option>
+                      <option value="devnet">Devnet</option>
+                      <option value="testnet">Testnet</option>
+                    </select>
                   </div>
                 </div>
               )}
@@ -281,7 +336,7 @@ const SendSolForm = () => {
 
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !amount || !address}
               className={`w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center transition-all duration-300 
                   ${
                     !amount || !address
@@ -300,48 +355,82 @@ const SendSolForm = () => {
                 </>
               )}
             </button>
+
+            {error && (
+              <p className="mt-2 text-red-400 text-xs flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1" />
+                {error}
+              </p>
+            )}
+
+            {/* Disconnect button */}
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={disconnectWallet}
+                className="text-gray-400 hover:text-gray-300 text-xs"
+              >
+                Disconnect Wallet
+              </button>
+            </div>
           </>
+        ) : (
+          <div className="text-center py-6 text-gray-400">
+            Connect your wallet to send SOL
+          </div>
         )}
 
         {/* Recent Transactions */}
-        <div className="mt-6">
-          <button
-            onClick={() => setShowRecentTx(!showRecentTx)}
-            className="flex items-center text-gray-400 hover:text-gray-300 text-sm"
-          >
-            <Clock className="w-4 h-4 mr-1" />
-            Recent Transactions
-            <ChevronDown
-              className={`w-4 h-4 ml-1 transition-transform ${
-                showRecentTx ? "transform rotate-180" : ""
-              }`}
-            />
-          </button>
+        {connected && (
+          <div className="mt-6">
+            <button
+              onClick={() => setShowRecentTx(!showRecentTx)}
+              className="flex items-center text-gray-400 hover:text-gray-300 text-sm"
+            >
+              <Clock className="w-4 h-4 mr-1" />
+              Recent Transactions
+              <ChevronDown
+                className={`w-4 h-4 ml-1 transition-transform ${
+                  showRecentTx ? "transform rotate-180" : ""
+                }`}
+              />
+            </button>
 
-          {showRecentTx && (
-            <div className="mt-2 bg-gray-700 bg-opacity-50 rounded-lg overflow-hidden animate-fade-in">
-              {recentTransactions.map((tx, i) => (
-                <div
-                  key={i}
-                  className="p-3 border-b border-gray-600 last:border-b-0"
-                >
-                  <div className="flex justify-between mb-1">
-                    <span className="text-gray-300 text-sm truncate">
-                      {tx.address}
-                    </span>
-                    <span className="text-gray-300 font-medium">
-                      {tx.amount} SOL
-                    </span>
+            {showRecentTx && (
+              <div className="mt-2 bg-gray-700 bg-opacity-50 rounded-lg overflow-hidden">
+                {recentTransactions && recentTransactions.length > 0 ? (
+                  recentTransactions.map((tx, i) => (
+                    <a
+                      key={i}
+                      href={`https://explorer.solana.com/tx/${tx.signature}?cluster=${network}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-3 border-b border-gray-600 last:border-b-0 hover:bg-gray-700"
+                    >
+                      <div className="flex justify-between mb-1">
+                        <span className="text-gray-300 text-sm truncate">
+                          {tx.address}
+                        </span>
+                        <span className="text-gray-300 font-medium">
+                          {tx.amount}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-xs text-gray-400">{tx.time}</span>
+                        <span className="text-xs text-green-400">
+                          {tx.status}
+                        </span>
+                      </div>
+                    </a>
+                  ))
+                ) : (
+                  <div className="p-3 text-center text-gray-400 text-sm">
+                    No recent transactions found
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-400">{tx.time}</span>
-                    <span className="text-xs text-green-400">{tx.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Security Badge */}
         <div className="mt-6 flex items-center justify-center text-xs text-gray-400">
@@ -350,7 +439,7 @@ const SendSolForm = () => {
         </div>
       </div>
 
-      {/* Background glow effects */}
+      {/* Background subtle effect */}
       <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-purple-600 rounded-full filter blur-3xl opacity-10"></div>
       <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-600 rounded-full filter blur-3xl opacity-10"></div>
     </div>
