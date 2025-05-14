@@ -1,13 +1,22 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import SendSolForm from "./components/SendSolForm";
-import Header from "./components/Header";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 export default function App() {
   const { connected } = useWallet();
   return (
     <>
       {/* Header */}
-      <Header />
+      <header className="sticky top-0 z-50 px-6 lg:px-20 py-4 flex justify-between items-center border-b border-gray-800 backdrop-blur-xl opacity-90 bg-gray-900">
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+            SendSol
+          </h1>
+        </div>
+
+        <WalletMultiButton />
+      </header>
+
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white overflow-hidden">
         {/* Hero Section */}
         <section className="min-h-[100vh] flex items-center justify-center px-6 md:px-20 relative">
